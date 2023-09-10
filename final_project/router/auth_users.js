@@ -36,36 +36,68 @@ regd_users.post("/login", (req,res) => {
   console.log(users)
   const token = jwt.sign({username},'secret-key', {expiresIn:'1h'});
   return res.status(200).json({token});
-
-
-
 });
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  const { isbn } = req.params;
-  const { review } = req.query;
-  const username = req.session.username;
+  const  isbn  = req.body;
+  const { review } = req.body;
+  const username = 'jawad';
 
-  // Find the book in the 'books' database based on ISBN
-  const book = books[isbn];
+  try {
+    // Find the book by ISBN
+    const findBookByISBN = (isbn) => {
+      for (const bookIndex in books) {
+        const book = books[bookIndex];
+        console.log(bookIndex);
+        console.log(book);
+        if (book.isbn === isbn) {
+          return book;
+        }
+      }
+      return null; // Move the return statement outside the loop
+    };
 
-  if (!book) {
-    return res.status(404).json({ message: "Book not found" });
+    const book = findBookByISBN(isbn)
+
+    console.log(book)
+
+    if (book) {
+      console.log('book', book);
+      const existingReviews = book.reviews;
+      console.log(existingReviews);
+
+      // If the same user already posted a review, modify it
+      let reviewFound = false;
+      for (const reviewIndex in existingReviews) {
+        const userReview = existingReviews[reviewIndex];
+        if (userReview.name === username) {
+          // Update the review score
+          userReview.review = review;
+          reviewFound = true;
+          break;
+        }
+      }
+
+      if (reviewFound) {
+        res.send('Review modified successfully.');
+      } else {
+        const newReview = {
+          name: username,
+          review: review
+        };
+
+        const newIndex = Object.keys(existingReviews).length;
+        existingReviews[newIndex] = newReview;
+        res.send(review);
+      }
+    } else {
+      res.status(404).json({ message: 'Book not found' });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(404).json(error);
   }
-
-  // Check if the user has already posted a review for the book
-  const existingReview = book.reviews[username];
-
-  if (existingReview) {
-    // Modify the existing review
-    existingReview.review = review;
-    return res.status(200).json({ message: "Review modified successfully" });
-  }
-
-  // Add a new review for the book
-  book.reviews[username] = { review };
-  return res.status(200).json({ message: "Review added successfully" });
 });
 
 module.exports.authenticated = regd_users;

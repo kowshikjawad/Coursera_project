@@ -95,8 +95,9 @@ public_users.get('/review/:isbn',function (req, res) {
 
 public_users.get('/getbooks_async', async function (req, res) {
   try {
-    const books = Object.values(books).map(book => book);
-    res.json(books);;
+    // Assuming you have an object containing book data, change variable names
+    const booksData = Object.values(books).map(book => book);
+    res.json(booksData);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -105,7 +106,7 @@ public_users.get('/getbooks_async', async function (req, res) {
 
 public_users.get('/getbooks_isbn_async', async function (req, res) {
   try {
-    const isbn_num = Object.values(books).map(book => book.ISBN);
+    const isbn_num = Object.values(books).map(book => book.isbn);
     res.json(isbn_num);;
   } catch (error) {
     console.log(error);
@@ -133,32 +134,67 @@ public_users.get('/getbooks_author_async', async function (req, res) {
   }
 });
 
-public_users.post("/addedreviews",(req,res) => {
-  
-  const isbn = req.query.isbn;
-  const username = users.username;
-  const review = req.query.review;
+public_users.post("/addedreviews", async function (req, res) {
+  const isbn = req.body.isbn;
+  const username = "jawad";
+  const review = req.body.review;
 
-  // Check if the book exists in the 'books' object
-  if (books.hasOwnProperty(isbn)) {
-    const book = books[isbn];
-    const existingReview = book.reviews[username];
+  try {
+    // Find the book by ISBN
+    const findBookByISBN = (isbn)=>{
+      for(const bookIndex in books){
+        const book = books[bookIndex]
+        console.log("bookIndex",bookIndex)
+        console.log("book",book)
+        console.log("book isbn",book.isbn)
+        console.log("isbn",isbn)
+        if(book.isbn=== isbn )
+        return book
+        else return null
+      }
+    };
 
-    // If the same user already posted a review, modify it
-    if (existingReview) {
-      book.reviews[username] = review;
-      res.send('Review modified successfully.');
+    const book = findBookByISBN(isbn)
+
+    console.log("book at line 156", findBookByISBN(isbn))
+
+    if (book) {
+      console.log('book', book);
+      const existingReviews = book.reviews;
+      console.log(existingReviews);
+
+      // If the same user already posted a review, modify it
+      let reviewFound = false;
+      for (const reviewIndex in existingReviews) {
+        const userReview = existingReviews[reviewIndex];
+        if (userReview.name === username) {
+          // Update the review score
+          userReview.review = review;
+          reviewFound = true;
+          break;
+        }
+      }
+
+      if (reviewFound) {
+        res.send('Review modified successfully.');
+      } else {
+        const newReview = {
+          name: username,
+          review: review
+        };
+
+        const newIndex = Object.keys(existingReviews).length;
+        existingReviews[newIndex] = newReview;
+        res.send(review);
+      }
     } else {
-      // If a different user or a new review, add it under the same ISBN
-      book.reviews[username] = review;
-      res.send('Review added successfully.');
+      res.status(404).json({ message: 'Book not found' });
     }
-  } else {
-    res.status(404).send('Book not found.');
+  } catch (error) {
+    console.log(error);
+    res.status(404).json(error);
   }
-
-  
-})
+});
 
 
 

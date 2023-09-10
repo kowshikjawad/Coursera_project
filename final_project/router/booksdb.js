@@ -1,5 +1,14 @@
 let books = {
-      1: {"isbn": "9780451530415", "author": "Chinua Achebe","title": "Things Fall Apart", "reviews": {} },
+      1: {"isbn": "9780451530415", "author": "Chinua Achebe","title": "Things Fall Apart", "reviews": {
+        0: {
+          name: 'asif',
+          review: 2
+        },
+        1:{
+          name: 'jawad',
+          review: 3
+        }
+      } },
       2: {"isbn": "9780143105831", "author": "Hans Christian Andersen","title": "Fairy tales", "reviews": {} },
       3: {"isbn": "9780142437223", "author": "Dante Alighieri","title": "The Divine Comedy", "reviews": {} },
       4: {"isbn": "9780140441000", "author": "Unknown","title": "The Epic Of Gilgamesh", "reviews": {} },
